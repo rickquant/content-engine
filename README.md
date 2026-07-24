@@ -29,6 +29,7 @@ It is also easier to sell: clients who care about their brand want approval, not
 - **The model is a sub-node, not the pipeline.** Swapping OpenAI for Gemini, Claude or a local model means replacing one node; nothing else in the workflow changes. Provider lock-in is a choice, not a requirement.
 - **Fan-out is capped before the expensive node.** The feed returns ~20 items; a Code node trims to 1 before the LLM runs. Without it, one click means 20 API calls.
 - **The prompt is a tuned parameter, not a wish.** The first iteration produced a soft hook and English-only hashtags on a Spanish post. Two explicit constraints fixed both.
+- **The prompt is written in Spanish on purpose.** The workflow is in English, but the voice brief is written in the language of the audience it writes for — a post for a Latin American audience is drafted in Spanish, including the register (*voseo*). Point the brief at another market and the language follows.
 
 ## Stack
 
