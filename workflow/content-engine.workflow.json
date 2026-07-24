@@ -1,0 +1,205 @@
+{
+  "name": "Demo 2 - Content Engine",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7ba2d4de-425a-4f52-a61a-b72a8f0875e2",
+      "name": "Arrancar a mano",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "id": "bc5d2a24-c76e-49b1-a680-a0f323db0dd6",
+      "name": "Fuente - Noticias IA",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Solo la noticia mas reciente (MVP: 1 post por corrida)\nreturn $input.all().slice(0, 1);"
+      },
+      "id": "175650a3-134b-4268-affe-1b64626feb9b",
+      "name": "Quedarse con la ultima",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos el community manager de Charles Rick, ingeniero de IA de Tegucigalpa, Honduras. Construye agentes y automatizaciones con Claude, Python y n8n. Su audiencia son otros devs y potenciales clientes freelance.\n\nNOTICIA DE HOY:\nTitulo: {{ $json.title }}\nResumen: {{ $json.contentSnippet }}\nLink: {{ $json.link }}\n\nEscribi un post de Instagram sobre esta noticia. Reglas:\n- Espanol con voseo, tono directo y sin humo. Nada de \"revolucionario\", \"game changer\" ni hype vacio.\n- Maximo 120 palabras.\n- Arranca con un gancho fuerte de una linea: una afirmacion filosa o un dato concreto, nunca una pregunta tibia.\n- Explica por que le importa a alguien que construye software, no solo que paso.\n- Cerra con una pregunta corta para provocar comentarios.\n- Al final agrega 4 hashtags en una sola linea: dos en espanol y dos en ingles.\n\nDevolve SOLO el texto del post, sin titulos ni explicaciones tuyas."
+      },
+      "id": "ee84990e-c989-4c0a-b650-4b35322afc67",
+      "name": "Generar el post",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1808,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4-mini"
+        },
+        "options": {}
+      },
+      "id": "7c893b88-742a-4016-b091-4ef0b279ec15",
+      "name": "GPT-5.4 mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        624
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Armamos el draft: el post + de donde salio, para poder revisar antes de publicar.\nconst noticia = $('Quedarse con la ultima').first().json;\n\nconst draft = [\n  '📝 DRAFT PARA IG',\n  '',\n  $json.text.trim(),\n  '',\n  '— — —',\n  'Fuente: ' + noticia.title,\n  noticia.link,\n].join('\\n');\n\nreturn { json: { draft } };"
+      },
+      "id": "a68934ee-c4d5-4453-a119-83baaf33e015",
+      "name": "Armar el draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.draft }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e2af6650-4477-4838-b612-4735d3396b2f",
+      "name": "Mandar a Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2304,
+        416
+      ],
+      "webhookId": "cca77b39-41b6-4c2e-bff2-168351acf54c",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Arrancar a mano": {
+      "main": [
+        [
+          {
+            "node": "Fuente - Noticias IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fuente - Noticias IA": {
+      "main": [
+        [
+          {
+            "node": "Quedarse con la ultima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quedarse con la ultima": {
+      "main": [
+        [
+          {
+            "node": "Generar el post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5.4 mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generar el post",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar el post": {
+      "main": [
+        [
+          {
+            "node": "Armar el draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar el draft": {
+      "main": [
+        [
+          {
+            "node": "Mandar a Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "activeVersionId": null,
+  "versionCounter": 9,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
