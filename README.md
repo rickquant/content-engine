@@ -56,6 +56,33 @@ Import `workflow/content-engine.workflow.json`, then set:
 
 No credentials are stored in this repository. n8n keeps them encrypted in `~/.n8n`.
 
+## What's in here
+
+```
+workflow/content-engine.workflow.json   the pipeline, importable into any n8n
+src/keep-latest-only.js                 Code node: caps the feed before the model
+src/build-the-draft.js                  Code node: bundles post + source
+tools/check_workflow.py                 pre-publish safety check
+```
+
+The two `src/` files are the Code nodes, lifted out so they can be read without
+importing anything. n8n runs the copies stored inside the workflow JSON.
+
+## Before publishing a workflow
+
+An n8n export is easy to push without reading. It should not contain credentials
+— n8n keeps those encrypted and exports only a reference — but it does contain
+whatever you typed into node parameters: chat ids, phone numbers, the occasional
+key pasted where it did not belong.
+
+```bash
+python3 tools/check_workflow.py workflow/content-engine.workflow.json
+```
+
+It fails the run on credential-shaped strings, personal identifiers left where a
+placeholder belongs, secrets inlined into credential references, and broken or
+orphaned connections. Exits non-zero, so it fits a pre-commit hook or a CI step.
+
 ## Status
 
 Working end to end. Manual trigger by design while the voice is being tuned — a schedule trigger is a one-node change.
