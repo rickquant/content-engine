@@ -4,6 +4,8 @@ An n8n workflow that reads a news source, writes a social media post in the clie
 
 Built with n8n + OpenAI. Runs locally, costs cents per post.
 
+![The workflow after a successful run](docs/canvas.png)
+
 ## What it does
 
 ```
